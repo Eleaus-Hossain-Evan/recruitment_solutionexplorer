@@ -39,6 +39,7 @@ dependencies:
   flutter_screenutil: ^5.9.3
   flutter_svg: ^2.0.16
   google_fonts: ^6.2.1
+  flutter_animate: ^4.5.2
   riverpod_annotation: ^4.0.0
   talker_riverpod_logger: ^5.1.9
   equatable: ^2.0.7
