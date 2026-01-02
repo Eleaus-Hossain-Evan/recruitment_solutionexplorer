@@ -24,24 +24,6 @@ class HomePage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final textController = useTextEditingController(text: _defaultTextContent);
-    final focusNode = useFocusNode();
-
-    // State to track if text is selected
-    final isTextSelected = useState(false);
-
-    // Listen to selection changes
-    useEffect(() {
-      void listener() {
-        final selection = textController.selection;
-        // Show button if selection is not collapsed (i.e., has range)
-        isTextSelected.value = !selection.isCollapsed && selection.start != -1;
-      }
-
-      textController.addListener(listener);
-      return () => textController.removeListener(listener);
-    }, [textController]);
-
     ref.listen<SelectionState>(textSelectionProvider, (previous, next) {
       // Handle action selection
       if (next.selectedText != null && next.action != null) {
@@ -67,44 +49,43 @@ class HomePage extends HookConsumerWidget {
             // Text content area
             Positioned.fill(
               child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(36.w, 80.h, 50.w, 100.h),
-                child: _TextContentArea(
-                  controller: textController,
-                  focusNode: focusNode,
+                padding: EdgeInsets.fromLTRB(36.w, 48.h, 50.w, 48.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'WikipediA',
+                      style: TextStyle(
+                        fontSize: 24.sp,
+                        color: AppColors.textPrimary,
+                        fontFamily: GoogleFonts.lustria().fontFamily,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    12.verticalSpace,
+                    _TextContentArea(),
+                  ],
                 ),
               ),
             ),
 
             // Action button - appears when text is selected
-            if (isTextSelected.value)
-              Positioned(
-                right: 0,
-                top: 368
-                    .h, // Position from Figma: 412px from top minus status bar
-                child: TextActionButton(
-                  onTap: () {
-                    // Update selected text in state
-                    ref
-                        .read(textSelectionProvider.notifier)
-                        .updateSelection(
-                          selectedText: textController.text
-                              .substring(
-                                textController.selection.start,
-                                textController.selection.end,
-                              )
-                              .trim(),
-                        );
-
-                    // Show bottom sheet for action selection
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Colors.transparent,
-                      isScrollControlled: true,
-                      builder: (context) => WritingAssistantBottomSheet(),
-                    );
-                  },
-                ),
+            Positioned(
+              right: 0,
+              top:
+                  368.h, // Position from Figma: 412px from top minus status bar
+              child: TextActionButton(
+                onTap: () {
+                  // Show bottom sheet for action selection
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    isScrollControlled: true,
+                    builder: (context) => WritingAssistantBottomSheet(),
+                  );
+                },
               ),
+            ),
           ],
         ),
       ),
@@ -126,16 +107,45 @@ class HomePage extends HookConsumerWidget {
 }
 
 /// Text content area with selection highlighting styled like the Figma design.
-class _TextContentArea extends StatelessWidget {
-  const _TextContentArea({required this.controller, required this.focusNode});
-
-  final TextEditingController controller;
-  final FocusNode focusNode;
+class _TextContentArea extends HookConsumerWidget {
+  const _TextContentArea();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final textController = useTextEditingController(text: _defaultTextContent);
+    final focusNode = useFocusNode();
+
+    // Listen to selection changes
+    useEffect(() {
+      void listener() {
+        final selection = textController.selection;
+        final hasSelection = !selection.isCollapsed && selection.start != -1;
+        // Update selected text in state
+        ref
+            .read(textSelectionProvider.notifier)
+            .updateSelection(
+              selectedText: textController.text
+                  .substring(
+                    textController.selection.start,
+                    textController.selection.end,
+                  )
+                  .trim(),
+            );
+
+        // Update provider to control button visibility
+        if (hasSelection) {
+          ref.read(textSelectionProvider.notifier).showButton();
+        } else {
+          ref.read(textSelectionProvider.notifier).hideButton();
+        }
+      }
+
+      textController.addListener(listener);
+      return () => textController.removeListener(listener);
+    }, [textController]);
+
     return TextField(
-      controller: controller,
+      controller: textController,
       focusNode: focusNode,
       maxLines: null,
       style: GoogleFonts.plusJakartaSans(

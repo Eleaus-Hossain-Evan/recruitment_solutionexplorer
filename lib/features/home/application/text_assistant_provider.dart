@@ -14,30 +14,34 @@ class SelectionState extends Equatable {
   // enum
   final TextAction? action;
   final String? customPrompt;
+  final bool isVisible;
   const SelectionState({
     this.selectedText,
     this.action,
     this.customPrompt,
+    this.isVisible = false,
   });
 
   SelectionState copyWith({
     ValueGetter<String?>? selectedText,
     ValueGetter<TextAction?>? action,
     ValueGetter<String?>? customPrompt,
+    bool? isVisible,
   }) {
     return SelectionState(
       selectedText: selectedText != null ? selectedText() : this.selectedText,
       action: action != null ? action() : this.action,
       customPrompt: customPrompt != null ? customPrompt() : this.customPrompt,
+      isVisible: isVisible ?? this.isVisible,
     );
   }
 
   @override
   String toString() =>
-      'SelectionState(selectedText: $selectedText, action: $action, customPrompt: $customPrompt)';
+      'SelectionState(selectedText: $selectedText, action: $action, customPrompt: $customPrompt, isVisible: $isVisible)';
 
   @override
-  List<Object?> get props => [selectedText, action, customPrompt];
+  List<Object?> get props => [selectedText, action, customPrompt, isVisible];
 }
 
 /// Notifier for managing text selection state
@@ -61,5 +65,15 @@ class TextSelection extends _$TextSelection {
 
   void clearSelection() {
     state = const SelectionState();
+  }
+
+  /// Show the text action button
+  void showButton() {
+    state = state.copyWith(isVisible: true);
+  }
+
+  /// Hide the text action button
+  void hideButton() {
+    state = state.copyWith(isVisible: false);
   }
 }

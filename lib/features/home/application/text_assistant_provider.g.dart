@@ -44,7 +44,7 @@ final class TextSelectionProvider
   }
 }
 
-String _$textSelectionHash() => r'f795a9bacf20bf81b8053cc67594ea5f21d60363';
+String _$textSelectionHash() => r'9344399885fc35b06766adcbe21047118b7bb989';
 
 /// Notifier for managing text selection state
 
