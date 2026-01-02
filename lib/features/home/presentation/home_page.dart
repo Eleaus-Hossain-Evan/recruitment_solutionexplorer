@@ -7,7 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../application/text_assistant_provider.dart';
+import '../application/text_assistant_provider.dart' hide TextSelection;
 import '../domain/text_action.dart';
 import 'widgets/widgets.dart';
 
@@ -75,14 +75,28 @@ class HomePage extends HookConsumerWidget {
               top:
                   368.h, // Position from Figma: 412px from top minus status bar
               child: TextActionButton(
-                onTap: () {
+                onTap: () async {
                   // Show bottom sheet for action selection
-                  showModalBottomSheet(
+                  final result = await showModalBottomSheet(
                     context: context,
-                    backgroundColor: Colors.transparent,
+                    backgroundColor: AppColors.white,
                     isScrollControlled: true,
+                    showDragHandle: true,
+                    enableDrag: true,
                     builder: (context) => WritingAssistantBottomSheet(),
                   );
+
+                  print('Bottom sheet result: $result');
+                  if (result != null && result is (TextAction, String?)) {
+                    final (action, customPrompt) = result;
+                    ref
+                        .read(textSelectionProvider.notifier)
+                        .updateSelection(
+                          action: action,
+                          customPrompt: customPrompt,
+                        );
+                    _handleActionSelected(context, action, customPrompt, null);
+                  }
                 },
               ),
             ),
@@ -115,33 +129,46 @@ class _TextContentArea extends HookConsumerWidget {
     final textController = useTextEditingController(text: _defaultTextContent);
     final focusNode = useFocusNode();
 
+    void focusNodeListener() {
+      if (!focusNode.hasFocus) {
+        // Clear selection when focus is lost
+        // ref.read(textSelectionProvider.notifier)
+        //   ..hideButton()
+        //   ..clearSelection();
+        // textController.selection = TextSelection.collapsed(offset: -1);
+      }
+    }
+
     // Listen to selection changes
     useEffect(() {
       void listener() {
         final selection = textController.selection;
-        final hasSelection = !selection.isCollapsed && selection.start != -1;
-        // Update selected text in state
-        ref
-            .read(textSelectionProvider.notifier)
-            .updateSelection(
-              selectedText: textController.text
-                  .substring(
-                    textController.selection.start,
-                    textController.selection.end,
-                  )
-                  .trim(),
-            );
+        final hasSelection = !selection.isCollapsed;
 
         // Update provider to control button visibility
         if (hasSelection) {
+          // Update selected text in state
+          ref
+              .read(textSelectionProvider.notifier)
+              .updateSelection(
+                selectedText: textController.text
+                    .substring(selection.start, selection.end)
+                    .trim(),
+              );
           ref.read(textSelectionProvider.notifier).showButton();
         } else {
-          ref.read(textSelectionProvider.notifier).hideButton();
+          ref.read(textSelectionProvider.notifier)
+            ..clearSelection()
+            ..hideButton();
         }
       }
 
       textController.addListener(listener);
-      return () => textController.removeListener(listener);
+      focusNode.addListener(focusNodeListener);
+      return () {
+        textController.removeListener(listener);
+        focusNode.removeListener(focusNodeListener);
+      };
     }, [textController]);
 
     return TextField(
@@ -163,6 +190,7 @@ class _TextContentArea extends HookConsumerWidget {
       // Custom selection highlight color to match Figma
       selectionHeightStyle: BoxHeightStyle.max,
       selectionWidthStyle: BoxWidthStyle.max,
+      contextMenuBuilder: (context, editableTextState) => SizedBox.shrink(),
     );
   }
 }

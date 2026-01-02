@@ -17,48 +17,21 @@ class WritingAssistantBottomSheet extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
+      padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: .min,
         children: [
-          // Handle bar
-          Padding(
-            padding: EdgeInsets.only(top: 8.h),
-            child: Container(
-              width: 32.w,
-              height: 4.h,
-              decoration: BoxDecoration(
-                color: AppColors.bottomSheetHandle,
-                borderRadius: BorderRadius.circular(11.r),
-              ),
-            ),
-          ),
-          // Content
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 12.h),
-                // Custom prompt input
-                _PromptInput(),
-                SizedBox(height: 12.h),
-                // Action chips
-                _ActionChips(),
-                SizedBox(height: 16.h),
-                // Action buttons
-                _ActionButtons(),
-                SizedBox(height: 48.h),
-              ],
-            ),
-          ),
+          SizedBox(height: 12.h),
+          // Custom prompt input
+          _PromptInput(),
+          SizedBox(height: 12.h),
+          // Action chips
+          _ActionChips(),
+          SizedBox(height: 16.h),
+          // Action buttons
+          _ActionButtons(),
+          SizedBox(height: 48.h),
         ],
       ),
     );
@@ -81,7 +54,7 @@ class _ActionButtons extends HookConsumerWidget {
             ref.read(textSelectionProvider.notifier).clearSelection();
           },
           style: ButtonStyle(
-            fixedSize: WidgetStatePropertyAll(Size(100.w, 36.h)),
+            fixedSize: WidgetStatePropertyAll(Size(120.w, 36.h)),
           ),
           child: Text('Insert'),
         ),
@@ -94,7 +67,7 @@ class _ActionButtons extends HookConsumerWidget {
             ref.read(textSelectionProvider.notifier).clearSelection();
           },
           style: ButtonStyle(
-            fixedSize: WidgetStatePropertyAll(Size(100.w, 36.h)),
+            fixedSize: WidgetStatePropertyAll(Size(120.w, 36.h)),
           ),
           child: Text('Replace'),
         ),
@@ -140,7 +113,10 @@ class _PromptInput extends HookConsumerWidget {
                         action: TextAction.customPrompt,
                       );
 
-                  Navigator.pop(context);
+                  Navigator.pop(context, (
+                    TextAction.customPrompt,
+                    value.trim(),
+                  ));
                 }
               },
             ),
@@ -149,15 +125,18 @@ class _PromptInput extends HookConsumerWidget {
             onTap: () {
               final text = controller.text.trim();
               if (text.isNotEmpty) {
-                // onActionSelected(TextAction.customPrompt, text);
-                ref
-                    .read(textSelectionProvider.notifier)
-                    .updateSelection(
-                      customPrompt: text,
-                      action: TextAction.customPrompt,
-                    );
+                // // onActionSelected(TextAction.customPrompt, text);
+                // ref
+                //     .read(textSelectionProvider.notifier)
+                //     .updateSelection(
+                //       customPrompt: text,
+                //       action: TextAction.customPrompt,
+                //     );
 
-                Navigator.pop(context);
+                Navigator.pop(context, (
+                  TextAction.customPrompt,
+                  text,
+                ));
               }
             },
             child: SvgPicture.asset(
@@ -177,79 +156,95 @@ class _ActionChips extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final actions = TextAction.values.where(
+      (action) => action != TextAction.customPrompt,
+    );
     return Wrap(
       spacing: 8.w,
       runSpacing: 8.h,
-      children: [
-        // First row - fixed width chips
-        AiActionChip(
-          label: 'Improve Writting',
+      children: actions.map((action) {
+        return AiActionChip(
+          label: action.label,
           onTap: () {
-            ref
-                .read(textSelectionProvider.notifier)
-                .updateSelection(
-                  action: TextAction.improveWriting,
-                );
-            Navigator.pop(context);
+            // ref
+            //     .read(textSelectionProvider.notifier)
+            //     .updateSelection(
+            //       action: action,
+            //     );
+            Navigator.pop(context, (action, null));
           },
-        ),
-        AiActionChip(
-          label: 'Plagiarism Check',
-          onTap: () {
-            ref
-                .read(textSelectionProvider.notifier)
-                .updateSelection(
-                  action: TextAction.plagiarismCheck,
-                );
-            Navigator.pop(context);
-          },
-        ),
-        // Second row
-        AiActionChip(
-          label: 'Regererate',
-          onTap: () {
-            ref
-                .read(textSelectionProvider.notifier)
-                .updateSelection(
-                  action: TextAction.regenerate,
-                );
-            Navigator.pop(context);
-          },
-        ),
-        AiActionChip(
-          label: 'Add a summary',
-          onTap: () {
-            ref
-                .read(textSelectionProvider.notifier)
-                .updateSelection(
-                  action: TextAction.addSummary,
-                );
-            Navigator.pop(context);
-          },
-        ),
-        // Third row
-        AiActionChip(
-          label: 'Add a summary',
-          onTap: () {
-            ref
-                .read(textSelectionProvider.notifier)
-                .updateSelection(
-                  action: TextAction.addSummary,
-                );
-            Navigator.pop(context);
-          },
-        ),
-        AiActionChip(
-          label: 'Add a summary',
-          onTap: () {
-            ref
-                .read(textSelectionProvider.notifier)
-                .updateSelection(
-                  action: TextAction.addSummary,
-                );
-          },
-        ),
-      ],
+        );
+      }).toList(),
+      // children: [
+      //   // First row - fixed width chips
+      //   AiActionChip(
+      //     label: 'Improve Writting',
+      //     onTap: () {
+      //       ref
+      //           .read(textSelectionProvider.notifier)
+      //           .updateSelection(
+      //             action: TextAction.improveWriting,
+      //           );
+      //       Navigator.pop(context, ());
+      //     },
+      //   ),
+      //   AiActionChip(
+      //     label: 'Plagiarism Check',
+      //     onTap: () {
+      //       ref
+      //           .read(textSelectionProvider.notifier)
+      //           .updateSelection(
+      //             action: TextAction.plagiarismCheck,
+      //           );
+      //       Navigator.pop(context);
+      //     },
+      //   ),
+      //   // Second row
+      //   AiActionChip(
+      //     label: 'Regererate',
+      //     onTap: () {
+      //       ref
+      //           .read(textSelectionProvider.notifier)
+      //           .updateSelection(
+      //             action: TextAction.regenerate,
+      //           );
+      //       Navigator.pop(context);
+      //     },
+      //   ),
+      //   AiActionChip(
+      //     label: 'Add a summary',
+      //     onTap: () {
+      //       ref
+      //           .read(textSelectionProvider.notifier)
+      //           .updateSelection(
+      //             action: TextAction.addSummary,
+      //           );
+      //       Navigator.pop(context);
+      //     },
+      //   ),
+      //   // Third row
+      //   AiActionChip(
+      //     label: 'Add a summary',
+      //     onTap: () {
+      //       ref
+      //           .read(textSelectionProvider.notifier)
+      //           .updateSelection(
+      //             action: TextAction.addSummary,
+      //           );
+      //       Navigator.pop(context);
+      //     },
+      //   ),
+      //   AiActionChip(
+      //     label: 'Add a summary',
+      //     onTap: () {
+      //       ref
+      //           .read(textSelectionProvider.notifier)
+      //           .updateSelection(
+      //             action: TextAction.addSummary,
+      //           );
+      //     },
+      //   ),
+      // ],
     );
   }
 }
