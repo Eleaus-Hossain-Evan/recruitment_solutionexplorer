@@ -106,12 +106,12 @@ class _PromptInput extends HookConsumerWidget {
               onSubmitted: (value) {
                 if (value.trim().isNotEmpty) {
                   // onActionSelected(TextAction.customPrompt, value.trim());
-                  ref
-                      .read(textSelectionProvider.notifier)
-                      .updateSelection(
-                        customPrompt: value.trim(),
-                        action: TextAction.customPrompt,
-                      );
+                  // ref
+                  //     .read(textSelectionProvider.notifier)
+                  //     .updateSelection(
+                  //       customPrompt: value.trim(),
+                  //       action: TextAction.customPrompt,
+                  //     );
 
                   Navigator.pop(context, (
                     TextAction.customPrompt,

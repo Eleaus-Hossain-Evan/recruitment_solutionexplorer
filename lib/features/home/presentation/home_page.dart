@@ -95,7 +95,6 @@ class HomePage extends HookConsumerWidget {
                           action: action,
                           customPrompt: customPrompt,
                         );
-                    _handleActionSelected(context, action, customPrompt, null);
                   }
                 },
               ),
